@@ -28,12 +28,16 @@ public class ErrorController {
 		final String givenType = e.getValue().getClass().getSimpleName();
 
 		final String errorMessage = String.format(
-				"parameter '%s' must be of type '%s'. Got '%s' of type '%s'",
-				param, requiredType, e.getValue().toString(), givenType);
+				"parameter '%s' must be of type '%s'. Got '%s' type",
+				param, requiredType, givenType);
 
-		return Map.of(
-				"error", "invalid parameter",
-				"message", errorMessage);
+		return Map.of("error", errorMessage);
+	}
+
+	@ExceptionHandler(ArithmeticException.class)
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	public Map<String, String> arithmeticError(ArithmeticException e) {
+		return Map.of("error", e.getMessage());
 	}
 
 	@ExceptionHandler(Exception.class)

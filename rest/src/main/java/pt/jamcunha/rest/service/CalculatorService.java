@@ -35,6 +35,7 @@ public class CalculatorService {
 	public BigDecimal sendOperation(final OperationDTO operationDTO) throws IOException {
 		final Message message = MessageBuilder
 				.withBody(mapper.writeValueAsBytes(operationDTO))
+				.setCorrelationId(operationDTO.requestId())
 				.build();
 
 		final Message response = rabbitTemplate.sendAndReceive(
@@ -44,6 +45,12 @@ public class CalculatorService {
 
 		if (response == null) {
 			throw new RuntimeException("No response received");
+		}
+
+		String correlationId = response.getMessageProperties().getCorrelationId();
+
+		if (!correlationId.equals(operationDTO.requestId())) {
+			throw new RuntimeException("Invalid correlation id");
 		}
 
 		final HashMap<String, Object> headers = (HashMap<String, Object>) response.getMessageProperties().getHeaders();

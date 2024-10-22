@@ -3,6 +3,7 @@ package pt.jamcunha.rest.filter;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.Filter;
@@ -23,10 +24,16 @@ public class RequestIdFilter implements Filter {
 
 		String requestId = UUID.randomUUID().toString();
 
+		MDC.put("requestId", requestId);
+
 		HttpServletResponse res = (HttpServletResponse) response;
 		res.addHeader(REQUEST_ID, requestId);
 
-		chain.doFilter(request, response);
+		try {
+			chain.doFilter(request, response);
+		} finally {
+			MDC.remove("requestId");
+		}
 	}
 
 }

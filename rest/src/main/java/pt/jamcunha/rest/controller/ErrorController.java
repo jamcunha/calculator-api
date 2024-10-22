@@ -43,7 +43,6 @@ public class ErrorController {
 	@ExceptionHandler(Exception.class)
 	@ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 	public Map<String, String> unexpectedError() {
-		// TODO: Log error
 		return Map.of("error", "unexpected error");
 	}
 }

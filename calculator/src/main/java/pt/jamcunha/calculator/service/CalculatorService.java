@@ -3,6 +3,7 @@ package pt.jamcunha.calculator.service;
 import java.io.IOException;
 import java.math.BigDecimal;
 
+import org.slf4j.MDC;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageBuilder;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -35,7 +36,11 @@ public class CalculatorService {
 		final ObjectMapper mapper = new ObjectMapper();
 
 		try {
-			final BigDecimal result = calculate(mapper.readValue(message.getBody(), OperationDTO.class));
+			OperationDTO operation = mapper.readValue(message.getBody(), OperationDTO.class);
+
+			MDC.put("requestId", operation.requestId());
+
+			final BigDecimal result = calculate(operation);
 
 			final Message response = MessageBuilder
 					.withBody(mapper.writeValueAsBytes(result))
@@ -54,6 +59,8 @@ public class CalculatorService {
 			sendError(message, "Division by zero");
 		} catch (Exception e) {
 			sendError(message, "Unexpected error");
+		} finally {
+			MDC.remove("requestId");
 		}
 	}
 
@@ -72,8 +79,6 @@ public class CalculatorService {
 				.fromMessage(message)
 				.setHeader("error", errorMessage)
 				.build();
-
-		// WARN: may need correlationId
 
 		rabbitTemplate.convertAndSend(
 				exchange,
